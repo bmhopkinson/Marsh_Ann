@@ -316,3 +316,33 @@ f-1 score=0.9187468587703133
 total_recall0.8285964980673027total_precision0.8359259084427262
  total_f_1score= 0.832245066417132
  ________________________________________________
+./modeling/saved_models/resnet_pa.torch
+TruePos	TrueNeg	FalsePos	FalseNeg	Recall	TrueNegRt	FalsePosRt	FalseNegRt	Precision
+Salicornia	788	1895	751	62	0.927059	0.716175	0.283825	0.072941	0.512021	
+Spartina	2178	870	250	198	0.916667	0.776786	0.223214	0.083333	0.897035	
+Limonium	0	3248	0	248	0.000000	1.000000	0.000000	1.000000	nan	
+Borrichia	0	3284	0	212	0.000000	1.000000	0.000000	1.000000	nan	
+Batis	502	2801	95	98	0.836667	0.967196	0.032804	0.163333	0.840871	
+Juncus	0	3363	0	133	0.000000	1.000000	0.000000	1.000000	nan	
+None	20	2938	0	538	0.035842	1.000000	0.000000	0.964158	1.000000	
+precision=0.7609075043630017
+recall=0.7008237894313843
+f-1 score=0.7296307917581842
+total_recall0.38803349296707934total_precisionnan
+ total_f_1score= nan
+ ________________________________________________
+./modeling/saved_models/resnet_pa.torch
+TruePos	TrueNeg	FalsePos	FalseNeg	Recall	TrueNegRt	FalsePosRt	FalseNegRt	Precision
+Salicornia	294	2523	123	556	0.345882	0.953515	0.046485	0.654118	0.705036	
+Spartina	2306	699	421	70	0.970539	0.624107	0.375893	0.029461	0.845618	
+Limonium	0	3248	0	248	0.000000	1.000000	0.000000	1.000000	nan	
+Borrichia	0	3284	0	212	0.000000	1.000000	0.000000	1.000000	nan	
+Batis	272	2862	34	328	0.453333	0.988260	0.011740	0.546667	0.888889	
+Juncus	0	3363	0	133	0.000000	1.000000	0.000000	1.000000	nan	
+None	4	2938	0	554	0.007168	1.000000	0.000000	0.992832	1.000000	
+precision=0.8326577880718008
+recall=0.5778581474784007
+f-1 score=0.6822440991578699
+total_recall0.2538461236563704total_precisionnan
+ total_f_1score= nan
+ ________________________________________________
