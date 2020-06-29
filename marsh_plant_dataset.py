@@ -16,10 +16,20 @@ class MarshPlant_Dataset_pa(Dataset):
         with open(infile,'r') as f:
             reader = csv.reader(f,delimiter='\t')
             for row in reader:
-                #print(row[0])
-                self.imgfiles.append(row[0])
-                ann = list(map(int,row[1:8]))
-                self.anns.append(ann)
+            #print(row[0])
+                fname = row[0]
+                try:
+                   im = cv2.imread(fname)
+                   height, width = im.shape[:2]
+                   if height > 100 and width > 100:
+                       self.imgfiles.append(fname)
+                       ann = list(map(int,row[1:8]))
+                       self.anns.append(ann)
+                   else:
+                       print("{} dimension are too small".format(fname))
+                except:
+                   print("{} does not refer to a valid img file".format(fname))
+
 
     def __len__(self):
         #return length of dataset
