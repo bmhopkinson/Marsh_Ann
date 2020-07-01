@@ -3,17 +3,13 @@ import cv2
 import torch
 import torch.nn as nn
 import torchvision
-from torchvision import transforms, models
-from modeling.backbone.resnet import ResNet101
-from marsh_plant_dataset import MarshPlant_Dataset_pa, MarshPlant_Dataset_pc
-from RN101_newtop import RN101_newtop
+from torchvision import transforms
 import Evaluator
 import Trainer
-#import PyramidNet_model.PyramidNet as prn
+
+from marsh_plant_dataset import MarshPlant_Dataset_pa, MarshPlant_Dataset_pc
 import torch.utils.data.distributed
 import torch.distributed as dist
-#from Attention_Augmented.attention_augmented_wide_resnet import Wide_ResNet
-#from neatcnn import NeatCNN
 
 import pdb
 
