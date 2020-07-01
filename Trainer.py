@@ -5,56 +5,56 @@ import torchvision
 from torchvision import transforms, models
 from modeling.backbone.resnet import ResNet101
 from RN101_newtop import RN101_newtop
+import TrainingMetrics
 
 class Trainer(object):
-	def __init__(self, datafiles, train_params, data_type="pa", modelname="resnet"):
-		self.batch_size_top = train_params['batch_size_top']
-		self.batch_size_all = train_params['batch_size_all']
+	def __init__(self, train_params, data_type="pa", modelname="resnet"):
+		self.batch_size['top'] = train_params['batch_size_top']
+		self.batch_size['all'] = train_params['batch_size_all']
+		self.epochs['top'] = train_params['epochs_top'] #30 number of epochs to train the top of the model
+		self.epochs['all'] = train_params['epochs_all'] #20 number of epochs to train the entire model
+
 		self.data_type=data_type
 		self.modelname=modelname
 		if(data_type=="pa"):
 			self.N_CLASSES = 7
-			self.train_infile = datafiles['pa']['train'] #"small_pa_sample.txt" #'marsh_data_all_train.txt'  # #
-			self.val_infile   = datafiles['pa']['val']   #"small_pa_sample.txt" #'marsh_data_all_val.txt'
 		elif(data_type=='pc'):
 			self.N_CLASSES = 9
-			self.train_infile = datafiles['pc']['train'] #'marsh_percent_cover_train'
-			self.val_infile   = datafiles['pc']['val'] # "marsh_percent_cover_val.txt"
 
 		self.log_file = open("marsh_plant_nn_training_logfile.txt","w")
 
-		self.epochs_top = train_params['epochs_top'] #30 number of epochs to train the top of the model
-		self.epochs_all = train_params['epochs_all'] #20 number of epochs to train the entire model
 		self.lr_top = 1e-4 # learning rate for training the top of your model
 		self.lr_all = 1e-5 # learning rate to use when training the entire model
 		self.model_path = './modeling/saved_models/'+modelname+'_'+data_type+'.torch'
 
+		self.dataloaders = {}
+		self.model = []
+		self.criterion = []
+		self.optimizable_parameters = []
+
 ###
 # DataLoader Setup
 ###
-	def setup_dataloader(self,dataset_dict,batch_size, bShuffle,num_workers,samplers):
-		dataloaders = {}
-		for key in dataset_dict:
-			if samplers is not None:
-				dataloaders[key] =  torch.utils.data.DataLoader(dataset_dict[key], batch_size = batch_size, shuffle = bShuffle, num_workers = num_workers,sampler=samplers[key])
-			else:
-				dataloaders[key] =  torch.utils.data.DataLoader(dataset_dict[key], batch_size = batch_size, shuffle = bShuffle, num_workers = num_workers)
-		return dataloaders
+	def setup_dataloaders(self,dataset_dict, bShuffle,num_workers,samplers):
+		for stage in self.batch_size:
+			for phase in dataset_dict:
+				if samplers is not None:
+					self.dataloaders[stage][phase] =  torch.utils.data.DataLoader(dataset_dict[phase], batch_size = self.batch_size[stage], shuffle = bShuffle, num_workers = num_workers,sampler=samplers[phase])
+				else:
+					self.dataloaders[stage][phase] =  torch.utils.data.DataLoader(dataset_dict[phase], batch_size =  self.batch_size[stage], shuffle = bShuffle, num_workers = num_workers)
+
 
 ###
 # Model Setup
 ###
 
-	def setup_model(self):
+	def setup_model(self, distributed):
 		if(self.modelname=="resnet"):
 			pretrained_model = ResNet101(BatchNorm=nn.BatchNorm2d, pretrained=True, output_stride=16)
 			resnet_bottom = torch.nn.Sequential(*list(pretrained_model.children())[:-1]) # remove last layer (fc) layer
 			model = RN101_newtop(base_model = resnet_bottom, num_classes = self.N_CLASSES)
 		elif(self.modelname=='densenet'):
 			model = models.densenet121(pretrained=True)
-			#densenet_bottom = torch.nn.Sequential(*list(pretrained_model.children())[:-1]) # remove last layer (fc) layer
-			#pretrained_model.classifier = nn.Linear(1024, num_classes)
-			#model = RN101_newtop(base_model = densenet_bottom, num_classes = self.N_CLASSES)
 			num_ftrs = model.classifier.in_features
 			model.classifier = nn.Linear(num_ftrs,self.N_CLASSES)
 		elif(self.modelname=='inception'):
@@ -92,97 +92,111 @@ class Trainer(object):
 			model = NeatCNN(num_classes=self.N_CLASSES,channel_size=256,group_size=2,depth=3,width=1,residual=True)
 			self.epochs_all=50
 			self.batch_size_all=4
-		return model
+
+		print(model)
+		model.cuda()
+		if distributed:
+			model = torch.nn.parallel.DistributedDataParallel(model)
+
+		self.model =  model
 
 # helper functions
-	def count_parameters(self,model):
-		return sum(p.numel() for p in model.parameters() if p.requires_grad)
+	def count_optimizable_parameters(self):
+		return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+
+	def set_optimizable_parameters(self, stage):
+		if stage == 'top':
+			for param in model.parameters():
+				param.requires_grad = False
+			if(self.modelname=='densenet' or self.modelname=='dpn'or self.modelname=='neat' or  self.modelname=='neater'):
+				params_to_optimize_in_top = list(self.model.classifier.parameters())
+			else:
+				params_to_optimize_in_top = list(self.model.fc.parameters())
+
+			for param in params_to_optimize_in_top:
+					param.requires_grad = True
+
+			self.optimizable_parameters = params_to_optimize_in_top
+
+		if stage == 'all':
+			for param in self.model.parameters():
+				param.requires_grad = True
+
+			self.optimizable_parameters = self.model.parameters()
+
+	def evaluate_batch(self, input, target, phase):
+		with torch.set_grad_enabled(phase =='train'):  #track gradients for backprop in training phase
+			sigfunc = nn.Sigmoid()
+			if(self.modelname=='inception' and phase=='train'):
+				output, aux_output = self.model(inputs)
+
+				##calculate loss - move this to a function: calculate_loss(output, target)
+				if(self.data_type=='pc'):
+					target=target.long()
+					#print(target)
+					label=torch.max(target, 1)[1]
+					loss1 = self.criterion(output, label)
+					loss2 = self.criterion(aux_output, label)
+					loss = loss1 + 0.4*loss2
+				else:
+					loss1 = self.criterion(output, target)
+					loss2 = self.criterion(aux_output, target)
+					loss = loss1 + 0.4*loss2  # evaluate loss
+
+			else :
+				output = self.model(inputs)  # pass in image series
+				if(self.data_type=='pc'):
+					target=target.long()
+					#print(target)
+					label=torch.max(target, 1)[1]
+					loss = self.criterion(output, label)  # evaluate loss
+				else:
+					loss = self.criterion(output, target)  # evaluate loss
 
 
-	def train(self,model, dataloaders, criterion, optimizer, num_epochs, scheduler,  best_acc=0 ):
-		for epoch in range(num_epochs):
+			#make predictions
+			if(self.data_type == 'pc'):
+				print("check how to make predictions for pc")
+			else:
+				sig = sigfunc(output)
+				sig = sig.to("cpu").detach().numpy()
+				pred = sig > 0.5 #make this threshold variable
+				pred = pred.astype(int)
+
+		return pred, loss
+
+
+	def train(self, stage, criterion, optimizer, scheduler = None,  best_score=0 ):
+		self.criterion = criterion
+		for epoch in range(self.epochs[stage]):
 			for phase in ['train','val']:
 				if phase == 'train':
-					model.train()
+					self.model.train()
 				else:
-					model.eval()
+					self.model.eval()
 
-				running_loss = 0.0
-				running_tp = 0
-				running_pos = 0
-				running_samples = 0
+				metrics = TrainingMetrics()
 
-				for it, batch in enumerate(dataloaders[phase]):
-					inputs  = batch['X'].cuda()#to(device)
+				for it, batch in enumerate(self.dataloaders[stage][phase]):
+					inputs = batch['X'].cuda()#to(device)
 					target = batch['Y'].cuda()#to(device)
-					#print("input's size")
-					#print(inputs.size())
-					#input_var = torch.autograd.Variable(inputs)
-					#print("variable'ssize")
-					#print(input_var.size())
 
 					optimizer.zero_grad()  #zero gradients
 
-					with torch.set_grad_enabled(phase =='train'):  #track gradients for backprop in training phase
-						if(self.modelname=='inception' and phase=='train'):
-							output, aux_output = model(inputs)
-							sigfunc = nn.Sigmoid()
-							sig = sigfunc(output)
-							if(self.data_type=='pc'):
-								target=target.long()
-								#print(target)
-								label=torch.max(target, 1)[1]
-								loss1 = criterion(output, label)
-								loss2 = criterion(aux_output, label)
-								loss = loss1 + 0.4*loss2
-							else:
-								loss1 = criterion(output, target)
-								loss2 = criterion(aux_output, target)
-								loss = loss1 + 0.4*loss2  # evaluate loss
-
-						else :
-							output = model(inputs)  # pass in image series
-							#_, preds = torch.max(output,1)
-							sigfunc = nn.Sigmoid()
-							sig = sigfunc(output)
-
-							if(self.data_type=='pc'):
-								target=target.long()
-								#print(target)
-								label=torch.max(target, 1)[1]
-								loss = criterion(output, label)  # evaluate loss
-							else:
-								loss = criterion(output, target)  # evaluate loss
-
-						if phase == 'train':
-							loss.backward()  # update the gradients
-							optimizer.step()  # update sgd optimizer lr
+					pred, loss = evaluate_batch(inputs, target, phase)
+					if phase == 'train':
+						loss.backward()  # update the gradients
+						optimizer.step()  # update sgd optimizer lr
 
 					# compare model output and annotations  - more easily done with numpy
-					target_np = target.to("cpu").detach().numpy()  #take off gpu, detach from gradients
-					target_np = target_np.astype(int)
-					sig_np    = sig.to("cpu").detach().numpy()
-					pred = sig_np > 0.5;
-					pred = pred.astype(int)
-					corr = np.equal(target_np, pred)
-					tp = np.where(target_np == 1, corr, False )  #true positives
-					fp = np.where(target_np == 0, np.logical_not(corr), False)  #false positives
-					tn = np.where(target_np == 0, corr, False )  #true negatives
-					fn = np.where(target_np == 1, np.logical_not(corr), False)  # false negatives
-					#print(np.sum(tp))
-					#print(fp)
-				#    print(sig_np.shape)
+					target = target.to("cpu").detach().numpy()  #take off gpu, detach from gradients
+					target = target.astype(int)
 
-					running_loss += loss.item() * inputs.size(0)
-					running_tp += np.sum(tp)
-					running_pos += np.sum(target_np)
-					running_samples += inputs.size(0)
+					n_samples =  inputs.size(0)
+					metrics.accumulate(loss.item(), n_samples, pred, target)
 
 					if it % 50 == 0:
-						avg_loss= running_loss/(running_samples)
-						tp_rate = running_tp/running_pos
-						#print("Epoch:", epoch, "Iteration:", it, "Average Loss:", avg_loss, "true_pos_rate", tp_rate)  # print the running/average loss, iterat starts at 0 thus +1
-						print('Epoch: {}, Iteration: {}, Loss: {:.4f}, TruePos_rate: {:.4f}'.format(epoch, it,avg_loss,tp_rate))
+						print('Epoch: {}, Iteration: {}, Loss: {:.4f}, F1_score: {:.4f}'.format(epoch, it, metrics.loss_per_sample, metrics.f1))
 
 				if scheduler:
 					scheduler.step()
@@ -190,13 +204,11 @@ class Trainer(object):
 					print(scheduler.get_lr())
 
 				# save model if it is the best model on val set
-				epoch_loss = running_loss/running_samples
-				epoch_acc = running_tp/running_pos
-				print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
-				self.log_file.write('epoch\t{}\tphase\t{}\tLoss\t{:.4f}\tAcc\t{:.4f}\n'.format(epoch, phase, epoch_loss, epoch_acc))
+				print('{} Loss: {:.4f} F1_score: {:.4f}'.format(phase, metrics.loss_per_sample, metrics.f1))
+				self.log_file.write('epoch\t{}\tphase\t{}\tLoss\t{:.4f}\tPrecision\t{:.4f}\n'.format(epoch, phase,  metrics.loss_per_sample, metrics.f1))
 
-				if phase == 'val' and epoch_acc > best_acc:
-					best_acc = epoch_acc
-					torch.save(model, self.model_path)# save state dict, this method is bound to break.
+				if phase == 'val' and metrics.f1 > best_score:
+					best_score = metrics.f1
+					torch.save(self.model, self.model_path)# save state dict, this method is bound to break.
 
-		return best_acc
+		return best_score
