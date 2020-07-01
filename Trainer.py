@@ -5,7 +5,7 @@ import torchvision
 from torchvision import transforms, models
 from modeling.backbone.resnet import ResNet101
 from RN101_newtop import RN101_newtop
-from TrainingMetrics import TrainingMetrics
+from PerformanceMetrics import PerformanceMetrics
 
 class Trainer(object):
 	def __init__(self, train_params, data_type="pa", modelname="resnet"):
@@ -179,7 +179,7 @@ class Trainer(object):
 				else:
 					self.model.eval()
 
-				metrics = TrainingMetrics()
+				metrics = PerformanceMetrics()
 
 				for it, batch in enumerate(self.dataloaders[stage][phase]):
 					input = batch['X'].cuda()#to(device)

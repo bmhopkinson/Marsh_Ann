@@ -107,5 +107,5 @@ if __name__ == "__main__":
 			best_f1 = trainer.train(stage, criterion, optimizer, scheduler = lr_scheduler, best_score=best_f1)
 			print('Finished training top, best acc {:.4f}'.format(best_f1))
 
-		performer=Evalulator.Evaluator(data_type=data_type,modelname=modelname,transform=transform_test)
+		performer=Evaluator.Evaluator(data_type=data_type,modelname=modelname,transform=transform_test)
 		print("Finished Performer class on test")
