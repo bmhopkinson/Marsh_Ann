@@ -24,19 +24,19 @@ class TrainingMetrics:  #this class is only appropriate for prescence/absence ri
 
     def accumulate(self, loss, batch_size, pred, target):
         corr = np.equal(target, pred)
-    	tp = np.where(target == 1, corr, False )  #true positives
-        tn = np.where(target_np == 0, corr, False )  #true negatives
-    	fp = np.where(target_np == 0, np.logical_not(corr), False)  #false positives
-    	fn = np.where(target_np == 1, np.logical_not(corr), False)  # false negatives
+        tp = np.where(target == 1, corr, False )  #true positives
+        tn = np.where(target == 0, corr, False )  #true negatives
+        fp = np.where(target == 0, np.logical_not(corr), False)  #false positives
+        fn = np.where(target == 1, np.logical_not(corr), False)  # false negatives
 
-    	self.loss =+ loss
-    	self.true_pos  += np.sum(tp)
+        self.loss =+ loss
+        self.true_pos  += np.sum(tp)
         self.true_neg  += np.sum(tn)
         self.false_pos += np.sum(fp)
         self.false_neg += np.sum(fn)
-    	self.postives  += np.sum(target)
+        self.positives  += np.sum(target)
         self.negatives += np.sum(np.logical_not(target))
-    	self.samples += batch_size
+        self.samples += batch_size
 
         self.precision = self.true_pos / (self.true_pos + self.false_pos)
         self.recall    = self.true_pos / (self.true_pos + self.false_neg)

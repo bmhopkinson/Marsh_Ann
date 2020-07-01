@@ -37,15 +37,15 @@ if __name__ == "__main__":
 	train_params = {
 		'batch_size_top' : 16 ,
 		'batch_size_all' : 4 ,
-		'epochs_top' : 20 ,
-		'epochs_all' : 20
+		'epochs_top' : 3 ,
+		'epochs_all' : 3
 	 }
 
 	distributed=False
 
 	for modelname in modellist:
 
-		trainer = Trainer(train_params, data_type=data_type,modelname=modelname)
+		trainer = Trainer.Trainer(train_params, data_type=data_type,modelname=modelname)
 		if(modelname=="pyramid" ): #or modelname=='dpn'):
 			image_dim=(224,224)
 		if(modelname=="aawide" ):
@@ -106,7 +106,7 @@ if __name__ == "__main__":
 		lr_scheduler_top = torch.optim.lr_scheduler.StepLR(optimizer_top, step_size=10, gamma=0.5)
 
 		b_f1 = trainer.train('top', criterion, optimizer_top, scheduler = lr_scheduler_top, best_score=0)#model, dataloaders_top, criterion, optimizer_top, trainer.epochs_top, scheduler = lr_scheduler_top, best_acc=0)
-		print('Finished training top, best acc {:.4f}'.format(b_acc))
+		print('Finished training top, best acc {:.4f}'.format(b_f1))
 
         #now optimize full model
 		trainer.set_optimizable_parameters('all')
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 		lr_scheduler_all = torch.optim.lr_scheduler.StepLR(optimizer_all, step_size=10, gamma=0.8)
 
 		b_f1 = trainer.train('top', criterion, optimizer_all, scheduler = lr_scheduler_all, best_score=b_f1)
-		print('Finished training bottom, best acc {:.4f}'.format(b_acc))
+		print('Finished training bottom, best acc {:.4f}'.format(b_f1))
 
-		performer=Evaluator(data_type=data_type,modelname=modelname,transform=transform_test)
+		performer=Evalulator.Evaluator(data_type=data_type,modelname=modelname,transform=transform_test)
 		print("Finished Performer class on test")

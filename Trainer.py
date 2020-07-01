@@ -5,10 +5,17 @@ import torchvision
 from torchvision import transforms, models
 from modeling.backbone.resnet import ResNet101
 from RN101_newtop import RN101_newtop
-import TrainingMetrics
+from TrainingMetrics import TrainingMetrics
 
 class Trainer(object):
 	def __init__(self, train_params, data_type="pa", modelname="resnet"):
+		self.batch_size = {}
+		self.epochs = {}
+		self.dataloaders = { 'top' : {}, 'all' :{} }
+		self.model = []
+		self.criterion = []
+		self.optimizable_parameters = []
+
 		self.batch_size['top'] = train_params['batch_size_top']
 		self.batch_size['all'] = train_params['batch_size_all']
 		self.epochs['top'] = train_params['epochs_top'] #30 number of epochs to train the top of the model
@@ -27,10 +34,7 @@ class Trainer(object):
 		self.lr_all = 1e-5 # learning rate to use when training the entire model
 		self.model_path = './modeling/saved_models/'+modelname+'_'+data_type+'.torch'
 
-		self.dataloaders = {}
-		self.model = []
-		self.criterion = []
-		self.optimizable_parameters = []
+
 
 ###
 # DataLoader Setup
@@ -106,7 +110,7 @@ class Trainer(object):
 
 	def set_optimizable_parameters(self, stage):
 		if stage == 'top':
-			for param in model.parameters():
+			for param in self.model.parameters():
 				param.requires_grad = False
 			if(self.modelname=='densenet' or self.modelname=='dpn'or self.modelname=='neat' or  self.modelname=='neater'):
 				params_to_optimize_in_top = list(self.model.classifier.parameters())
@@ -128,7 +132,7 @@ class Trainer(object):
 		with torch.set_grad_enabled(phase =='train'):  #track gradients for backprop in training phase
 			sigfunc = nn.Sigmoid()
 			if(self.modelname=='inception' and phase=='train'):
-				output, aux_output = self.model(inputs)
+				output, aux_output = self.model(input)
 
 				##calculate loss - move this to a function: calculate_loss(output, target)
 				if(self.data_type=='pc'):
@@ -144,7 +148,7 @@ class Trainer(object):
 					loss = loss1 + 0.4*loss2  # evaluate loss
 
 			else :
-				output = self.model(inputs)  # pass in image series
+				output = self.model(input)  # pass in image series
 				if(self.data_type=='pc'):
 					target=target.long()
 					#print(target)
@@ -178,12 +182,12 @@ class Trainer(object):
 				metrics = TrainingMetrics()
 
 				for it, batch in enumerate(self.dataloaders[stage][phase]):
-					inputs = batch['X'].cuda()#to(device)
+					input = batch['X'].cuda()#to(device)
 					target = batch['Y'].cuda()#to(device)
 
 					optimizer.zero_grad()  #zero gradients
 
-					pred, loss = evaluate_batch(inputs, target, phase)
+					pred, loss = self.evaluate_batch(input, target, phase)
 					if phase == 'train':
 						loss.backward()  # update the gradients
 						optimizer.step()  # update sgd optimizer lr
@@ -192,7 +196,7 @@ class Trainer(object):
 					target = target.to("cpu").detach().numpy()  #take off gpu, detach from gradients
 					target = target.astype(int)
 
-					n_samples =  inputs.size(0)
+					n_samples =  input.size(0)
 					metrics.accumulate(loss.item(), n_samples, pred, target)
 
 					if it % 50 == 0:
