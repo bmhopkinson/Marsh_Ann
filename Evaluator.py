@@ -8,6 +8,7 @@ from sklearn.metrics import confusion_matrix
 import itertools
 from torchvision import transforms
 import matplotlib.pyplot as plt
+from PerformanceMetrics import PerformanceMetrics , PerformanceMetricsPerClass
 
 class Evaluator(object):
 	def __init__(self, data_type="pa", modelname="resnet", batch_size=32,transform=None):
@@ -45,23 +46,24 @@ class Evaluator(object):
 
 		pred = np.empty((0,self.N_CLASSES), int)
 		ann  = np.empty((0,self.N_CLASSES), int)
-		sigs = np.empty((0,self.N_CLASSES), int)
+
+		metrics = PerformanceMetrics()
+		metrics_per_class = PerformanceMetricsPerClass()
 
 		with torch.no_grad():
 			for it, batch in enumerate(data_loader):
-				output = model(batch['X'].to(gpu)).to(cpu)
+				input = batch['X'].cuda()#to(device)
+				output = model(input).to(cpu)
 
 
 				if(self.data_type=='pa'):
 					sig = output.detach().numpy()
-					sigs= np.append(sigs, sig, axis = 0)
 					this_pred=np.zeros_like(sig)
 					this_pred = sig > self.THRESHOLD_SIG;
 
 				elif(self.data_type=='pc'):
 					sig = sigfunc(output)
 					sig = sig.detach().numpy()
-					sigs= np.append(sigs, sig, axis = 0)
 					this_pred=np.zeros_like(sig)
 					this_pred=(sig == sig.max(axis=1)[:,None]).astype(int)
 
@@ -76,9 +78,10 @@ class Evaluator(object):
 				#print(this_ann)
 				ann = np.append(ann, this_ann.astype(int), axis = 0)
 
-		#print(pred)
-		#np.savetxt('pred.txt',pred, fmt='%i', delimiter='\t')
-		#np.savetxt('ann.txt' ,ann , fmt='%i', delimiter='\t')
+				n_samples =  input.size(0)
+				metrics.accumulate(0.0, batch_size, this_pred.astype(int), this_ann.astype(int))
+				metrics_per_class.accumulate(0.0, batch_size, this_pred.astype(int), this_ann.astype(int))
+
 
 		# evaluate performance on test dataset
 		#n_samples, c = ann.shape
@@ -117,14 +120,16 @@ class Evaluator(object):
 		accuracy= (tptt+fptt)/(tptt+fptt+fntt+tntt)
 		fout = open(self.outfile,'a')
 		fout.write('%s\n'%self.model_path)
-		fout.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % ("TruePos","TrueNeg","FalsePos","FalseNeg","Recall","TrueNegRt","FalsePosRt","FalseNegRt","Precision"))
+		fout.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % ("TruePos","TrueNeg","FalsePos","FalseNeg","Recall","TrueNegRt","FalsePosRt","FalseNegRt","Precision", "Recall", "F1"))
 		total_precision=0.0
 		total_recall=0.0
 		for i in range(self.N_CLASSES):
 			fout.write('%s\t' % self.Pennings_Classes[i])
-			fout.write('%d\t%d\t%d\t%d\t' % (tpt[i], tnt[i],fpt[i],fnt[i]) )
-			fout.write('%f\t%f\t%f\t%f\t%f\t' % (tpr[i], tnr[i],fpr[i],fnr[i],ind_precision[i]) )
+			fout.write('%d\t%d\t%d\t%d\t' % (metrics_per_class.true_pos[i], metrics_per_class.true_neg[i],metrics_per_class.false_pos[i], metrics_per_class.false_neg[i]) )
+			fout.write('%f\t%f\t%f\t%f\t' % (metrics_per_class.true_pos_rate[i], metrics_per_class.true_neg_rate[i],metrics_per_class.false_pos_rate[i], metrics_per_class.false_neg_rate[i]) )
+			fout.write('%f\t%f\t%f\t'     % (metrics_per_class.precision[i], metrics_per_class.recall[i],metrics_per_class.f1[i] ) )
 			fout.write('\n')
+			################## WORKING HERE ############################################
 			total_precision+=ind_precision[i]
 			total_recall+=tpr[i]
 		tot_f_score= (2*total_precision*total_recall)/((total_precision+total_recall)*self.N_CLASSES)

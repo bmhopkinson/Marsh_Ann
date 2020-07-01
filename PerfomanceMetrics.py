@@ -47,3 +47,55 @@ class PerformanceMetrics:  #this class is only appropriate for prescence/absence
         self.false_pos_rate = self.false_pos /self.negatives
         self.false_neg_rate = self.false_neg /self.positives
         self.loss_per_sample = self.loss / self.samples
+
+
+class PerformanceMetricsPerClass:
+    def __init__(self, n_classes):
+        self.loss = 0.0
+        self.n_classes = n_classes
+        self.pred = np.empty((0, n_classes), int)
+        self.target  = np.empty((0, n_classes), int)
+        self.true_pos  = np.empty((0, n_classes), int)
+        self.true_neg  = np.empty((0, n_classes), int)
+        self.false_pos = np.empty((0, n_classes), int)
+        self.false_neg = np.empty((0, n_classes), int)
+        self.positives = np.empty((0, n_classes), int)
+        self.negatives = np.empty((0, n_classes), int)
+        self.samples   = 0
+
+        #metrics
+        self.precision = np.empty((0, n_classes), double)
+        self.recall = np.empty((0, n_classes), double)
+        self.f1 = np.empty((0, n_classes), double)
+        self.true_pos_rate   = np.empty((0, n_classes), double)
+        self.true_neg_rate   = np.empty((0, n_classes), double)
+        self.false_pos_rate  = np./ empty((0, n_classes), double)
+        self.false_neg_rate  = np.empty((0, n_classes), double)
+        self.loss_per_sample = np.empty((0, n_classes), double)
+
+    def accumulate(self, loss, batch_size, pred, target):
+
+        corr = np.equal(target, pred)
+        tp = np.where(target == 1, corr, False )  #true positives
+        tn = np.where(target == 0, corr, False )  #true negatives
+        fp = np.where(target == 0, np.logical_not(corr), False)  #false positives
+        fn = np.where(target == 1, np.logical_not(corr), False)  # false negatives
+
+        self.loss += loss
+        self.true_pos  += np.sum(tp,axis=0)
+        self.true_neg  += np.sum(tn,axis=0)
+        self.false_pos += np.sum(fp,axis=0)
+        self.false_neg += np.sum(fn,axis=0)
+        self.positives += np.sum(target, axis=0)
+        self.negatives += np.sum(target, axis=0)
+        self.samples =+ batch_size
+
+
+        self.precision = np.divide(self.true_pos, (self.true_pos + self.false_pos) )
+        self.recall    = np.divide(self.true_pos, (self.true_pos + self.false_neg) )
+        self.f1 = 2 * np.divide( (np.multiply(self.precision , self.recall) , (self.precision + self.recall) ) )
+        self.true_pos_rate  = np.divide( self.true_pos  , self.positives)
+        self.true_neg_rate  = np.divide( self.true_neg  , self.negatives)
+        self.false_pos_rate = np.divide( self.false_pos , self.negatives)
+        self.false_neg_rate = np.divide( self.false_neg , self.positives)
+        self.loss_per_sample = np.divide( self.loss , self.samples)
