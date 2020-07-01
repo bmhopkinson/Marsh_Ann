@@ -222,7 +222,7 @@ if __name__ == "__main__":
 	print("PyTorch Version: ",torch.__version__)
 	#inputs
 	data_type="pa"
-	modellist= ['resnet']  #['dpn']#,'neat' 'aawide','resnext','densenet','resnet','inception','pyramid','dpn']
+	modellist= ['resnext']  #['dpn']#,'neat' 'aawide','resnext','densenet','resnet','inception','pyramid','dpn']
 	image_dim=(512,512)
 
 	distributed=False
