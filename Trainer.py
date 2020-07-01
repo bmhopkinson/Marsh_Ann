@@ -11,6 +11,7 @@ class Trainer(object):
 	def __init__(self, train_params, data_type="pa", modelname="resnet"):
 		self.batch_size = {}
 		self.epochs = {}
+		self.lr = {}
 		self.dataloaders = { 'top' : {}, 'all' :{} }
 		self.model = []
 		self.criterion = []
@@ -20,6 +21,8 @@ class Trainer(object):
 		self.batch_size['all'] = train_params['batch_size_all']
 		self.epochs['top'] = train_params['epochs_top'] #30 number of epochs to train the top of the model
 		self.epochs['all'] = train_params['epochs_all'] #20 number of epochs to train the entire model
+		self.lr['top'] = 1e-4
+		self.lr['all'] = 1e-5
 
 		self.data_type=data_type
 		self.modelname=modelname
@@ -29,9 +32,6 @@ class Trainer(object):
 			self.N_CLASSES = 9
 
 		self.log_file = open("marsh_plant_nn_training_logfile.txt","w")
-
-		self.lr_top = 1e-4 # learning rate for training the top of your model
-		self.lr_all = 1e-5 # learning rate to use when training the entire model
 		self.model_path = './modeling/saved_models/'+modelname+'_'+data_type+'.torch'
 
 

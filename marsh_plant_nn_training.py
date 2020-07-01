@@ -15,6 +15,7 @@ import torch.distributed as dist
 #from Attention_Augmented.attention_augmented_wide_resnet import Wide_ResNet
 #from neatcnn import NeatCNN
 
+import pdb
 
 if __name__ == "__main__":
 	print("PyTorch Version: ",torch.__version__)
@@ -97,26 +98,18 @@ if __name__ == "__main__":
 		trainer.setup_dataloaders(datasets, bShuffle, num_workers,samplers=samplers)
 		trainer.setup_model(distributed) #setup model and training parameters
 
-        #can compress below using a "for stage in ['top','all']" loop
+		best_f1 = 0.0
+		gamma = {'top' :0.5, 'all': 0.8}
+		for stage in ['top', 'all']:
 		# Train Top (fc) layer
-		trainer.set_optimizable_parameters('top')  		# Freeze bottom of model so we are only training the top linear layer
-		print("Training Top:", trainer.count_optimizable_parameters(), "Parameters")
+			trainer.set_optimizable_parameters(stage)
+			print("Training {}: {} parameters optimized".format(stage, trainer.count_optimizable_parameters() ) )
 
-		optimizer_top = torch.optim.Adam(trainer.optimizable_parameters, lr = trainer.lr_top)
-		lr_scheduler_top = torch.optim.lr_scheduler.StepLR(optimizer_top, step_size=10, gamma=0.5)
+			optimizer = torch.optim.Adam(trainer.optimizable_parameters, lr = trainer.lr[stage])
+			lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=gamma[stage])
 
-		b_f1 = trainer.train('top', criterion, optimizer_top, scheduler = lr_scheduler_top, best_score=0)#model, dataloaders_top, criterion, optimizer_top, trainer.epochs_top, scheduler = lr_scheduler_top, best_acc=0)
-		print('Finished training top, best acc {:.4f}'.format(b_f1))
-
-        #now optimize full model
-		trainer.set_optimizable_parameters('all')
-		print("Training All:", trainer.count_optimizable_parameters(), "Parameters")
-
-		optimizer_all = torch.optim.Adam(trainer.optimizable_parameters, lr = trainer.lr_all)
-		lr_scheduler_all = torch.optim.lr_scheduler.StepLR(optimizer_all, step_size=10, gamma=0.8)
-
-		b_f1 = trainer.train('top', criterion, optimizer_all, scheduler = lr_scheduler_all, best_score=b_f1)
-		print('Finished training bottom, best acc {:.4f}'.format(b_f1))
+			best_f1 = trainer.train(stage, criterion, optimizer, scheduler = lr_scheduler, best_score=best_f1)
+			print('Finished training top, best acc {:.4f}'.format(best_f1))
 
 		performer=Evalulator.Evaluator(data_type=data_type,modelname=modelname,transform=transform_test)
 		print("Finished Performer class on test")

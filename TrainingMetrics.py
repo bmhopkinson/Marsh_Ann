@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class TrainingMetrics:  #this class is only appropriate for prescence/absence right now
     def __init__(self):
         #raw data - accumulated as batches are processed

@@ -9,6 +9,7 @@ import itertools
 from torchvision import transforms
 import matplotlib.pyplot as plt
 
+
 class Performer(object):
 	def __init__(self, data_type="pa", modelname="resnet", batch_size=32,transform=None):
 		self.outfile ='performance_bozo.txt'
@@ -19,7 +20,7 @@ class Performer(object):
 		self.modelname=modelname
 		self.data_type=data_type
 		self.transform=transform
-		if(data_type=="pa"): 
+		if(data_type=="pa"):
 			self.N_CLASSES = 7
 			self.test_infile = 'marsh_data_all_test.txt'
 			self.Pennings_Classes = ['Salicornia','Spartina','Limonium','Borrichia','Batis','Juncus','None']
@@ -29,15 +30,15 @@ class Performer(object):
 			self.test_infile  = 'marsh_percent_cover_test.txt'
 			self.Pennings_Classes = [ 'Spartina','Juncus', 'Salicornia','Batis','Borrichia','Limonium','Soil' ,'other','Unknown' ]
 			self.test_data  = MarshPlant_Dataset_pc(self.test_infile,transform=self.transform)
-			
 
-		
+
+
 		self.model_path = './modeling/saved_models/'+modelname+'_'+data_type+'.torch'
 		model = torch.load(self.model_path)
 		#print(model)
 		model.eval()
 		sigfunc = nn.Sigmoid()
-		
+
 		data_loader = torch.utils.data.DataLoader(self.test_data, batch_size = self.batch_size, shuffle = self.bShuffle, num_workers = self.num_workers)
 
 		cpu = torch.device("cpu")
@@ -51,29 +52,29 @@ class Performer(object):
 			for it, batch in enumerate(data_loader):
 				output = model(batch['X'].to(gpu)).to(cpu)
 
-				
+
 				if(self.data_type=='pa'):
 					sig = output.detach().numpy()
 					sigs= np.append(sigs, sig, axis = 0)
 					this_pred=np.zeros_like(sig)
 					this_pred = sig > self.THRESHOLD_SIG;
 
-				elif(self.data_type=='pc'): 
+				elif(self.data_type=='pc'):
 					sig = sigfunc(output)
 					sig = sig.detach().numpy()
 					sigs= np.append(sigs, sig, axis = 0)
 					this_pred=np.zeros_like(sig)
 					this_pred=(sig == sig.max(axis=1)[:,None]).astype(int)
-					
-				
-					
+
+
+
 				#print(this_pred)
 				pred = np.append(pred, this_pred.astype(int), axis = 0)
 				#print("Predictions'sigmoid in Batch size 32")
 				#print(sig)
 				this_ann = batch['Y'].to(cpu).detach().numpy()  #take off gpu, detach from gradients
 				#print("Labels in batch size 32")
-				#print(this_ann) 
+				#print(this_ann)
 				ann = np.append(ann, this_ann.astype(int), axis = 0)
 
 		#print(pred)
@@ -104,7 +105,7 @@ class Performer(object):
 		tnr = tnt/ntot #true negative rate
 		fpr = fpt/ntot #false positive rate
 		fnr = fnt/ptot #false negative rate
-		ind_precision = tpt/(tpt+fpt) #individual precision 
+		ind_precision = tpt/(tpt+fpt) #individual precision
 
 		#total total for precision, recall and F1 score
 		tptt = np.sum(tp)
@@ -138,17 +139,17 @@ class Performer(object):
 		 implement and save plot from this : https://datascience.stackexchange.com/questions/40067/confusion-matrix-three-classes-python
 		 implement this for multi-label and multi-class confusion matrix : https://stackoverflow.com/questions/53886370/multi-class-multi-label-confusion-matrix-with-sklearn
 		"""
-		if(data_type=='pc'): 
+		if(data_type=='pc'):
 
 			#TODO: Covert Ann and pred to lists with labels.
 			x,y=ann.shape
 			y_true=[]
 			y_pred=[]
-			for i in range(x): 
-				for j in range(self.N_CLASSES): 
+			for i in range(x):
+				for j in range(self.N_CLASSES):
 					if(ann[i][j]==1):
 						y_true.append(self.Pennings_Classes[j])
-				for j in range(self.N_CLASSES): 
+				for j in range(self.N_CLASSES):
 					if(pred[i][j]==1):
 						y_pred.append(self.Pennings_Classes[j])
 						break
@@ -164,7 +165,7 @@ class Performer(object):
 			# Plot non-normalized confusion matrix
 			plt.figure()
 			self.plot_confusion_matrix(fout,cnf_matrix, classes=self.Pennings_Classes,title='Confusion matrix, without normalization')
-		elif(data_type=='pa'): 
+		elif(data_type=='pa'):
 			self.multi_label_confusion_matrix(ann,pred,fout)
 
 	def plot_confusion_matrix(self,fout, cm, classes,
@@ -198,7 +199,7 @@ class Performer(object):
 		plt.xlabel('Predicted label')
 		plt.tight_layout()
 		plt.savefig('./Results/'+self.modelname+self.data_type+'.png', bbox_inches='tight',dpi=600)
-	def multi_label_confusion_matrix(self,ann,pred,fout): 
+	def multi_label_confusion_matrix(self,ann,pred,fout):
 		y_true = ann
 		y_pred = pred
 		labels = self.Pennings_Classes
@@ -216,16 +217,16 @@ class Performer(object):
 
 if __name__ == "__main__":
 	model = torch.hub.load('rwightman/pytorch-dpn-pretrained', 'dpn92', pretrained=True)
-			
+
 	image_dim=(512,512)
 	modellist=['dpn','densenet','resnext','resnet','inception','pyramid']
-	for modelname in modellist: 
-		if modelname=='pyramid': 
+	for modelname in modellist:
+		if modelname=='pyramid':
 			image_dim=(224,224)
 		transform_test = transforms.Compose([
     	transforms.Resize(image_dim),
-    	transforms.ToTensor(), 
+    	transforms.ToTensor(),
     	transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 		])
-		#performer=Performer(data_type="pa",modelname="ResNet101_row50_2020",transform=transform_test)	 
+		#performer=Performer(data_type="pa",modelname="ResNet101_row50_2020",transform=transform_test)
 		performer=Performer(data_type="pa",modelname=modelname,transform=transform_test)
