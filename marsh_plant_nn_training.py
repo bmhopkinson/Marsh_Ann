@@ -13,6 +13,9 @@ import torch.distributed as dist
 
 import pdb
 
+train_infile = ['./infiles/pa_2014_ann_train.txt']#, './infiles/pa_2014_spartadd_train.txt', './infiles/pa_2014_juncadd_train.txt']
+val_infile   = ['./infiles/pa_2014_ann_val.txt'  ]#, './infiles/pa_2014_spartadd_val.txt'  , './infiles/pa_2014_juncadd_val.txt']
+
 if __name__ == "__main__":
 	print("PyTorch Version: ",torch.__version__)
 	#inputs
@@ -20,8 +23,8 @@ if __name__ == "__main__":
 	modellist= ['resnet']  #['dpn']#,'neat' 'aawide','resnext','densenet','resnet','inception','pyramid','dpn']
 	image_dim=(512,512)
 	datafiles  = { 'pa':
-			{ 'train' : 'small_pa_sample.txt',
-		  	  'val'   : 'small_pa_sample.txt'
+			{ 'train' : ['./infiles/pa_2014_ann_train.txt', './infiles/pa_2014_spartadd_train.txt', './infiles/pa_2014_juncadd_train.txt'],
+		  	  'val'   : ['./infiles/pa_2014_ann_val.txt'  , './infiles/pa_2014_spartadd_val.txt'  , './infiles/pa_2014_juncadd_val.txt']
 		},
 
 		'pc':

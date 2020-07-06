@@ -8,27 +8,28 @@ from torch.utils.data import Dataset
 from PIL import Image
 
 class MarshPlant_Dataset_pa(Dataset):
-    def __init__(self, infile,transform=None):
+    def __init__(self, infiles,transform=None):
         #initialize dataset
         self.imgfiles = []
         self.anns = []
         self.transform= transform
-        with open(infile,'r') as f:
-            reader = csv.reader(f,delimiter='\t')
-            for row in reader:
-            #print(row[0])
-                fname = row[0]
-                try:
-                   im = cv2.imread(fname)
-                   height, width = im.shape[:2]
-                   if height > 100 and width > 100:
-                       self.imgfiles.append(fname)
-                       ann = list(map(int,row[1:8]))
-                       self.anns.append(ann)
-                   else:
-                       print("{} dimension are too small".format(fname))
-                except:
-                   print("{} does not refer to a valid img file".format(fname))
+        for file in infiles:
+            with open(file,'r') as f:
+                reader = csv.reader(f,delimiter='\t')
+                for row in reader:
+                    #print(row[0])
+                    fname = row[0]
+                    try:
+                        im = cv2.imread(fname)
+                        height, width = im.shape[:2]
+                        if height > 100 and width > 100:
+                            self.imgfiles.append(fname)
+                            ann = list(map(int,row[1:8]))
+                            self.anns.append(ann)
+                        else:
+                            print("{} dimension are too small".format(fname))
+                    except:
+                        print("{} does not refer to a valid img file".format(fname))
 
 
     def __len__(self):
