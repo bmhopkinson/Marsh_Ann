@@ -20,7 +20,7 @@ if __name__ == "__main__":
 	print("PyTorch Version: ",torch.__version__)
 	#inputs
 	data_type="pa"
-	modellist= ['resnet']  #['dpn']#,'neat' 'aawide','resnext','densenet','resnet','inception','pyramid','dpn']
+	modellist= ['resnext']  #['dpn']#,'neat' 'aawide','resnext','densenet','resnet','inception','pyramid','dpn']
 	image_dim=(512,512)
 	datafiles  = { 'pa':
 			{ 'train' : ['./infiles/pa_2014_ann_train.txt', './infiles/pa_2014_spartadd_train.txt', './infiles/pa_2014_juncadd_train.txt'],
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 			lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=gamma[stage])
 
 			best_f1 = trainer.train(stage, criterion, optimizer, scheduler = lr_scheduler, best_score=best_f1)
-			print('Finished training top, best acc {:.4f}'.format(best_f1))
+			print('Finished training {}, best acc {:.4f}'.format(stage, best_f1))
 
 		performer=Evaluator.Evaluator(data_type=data_type,modelname=modelname,transform=transform_test)
 		print("Finished Performer class on test")

@@ -200,7 +200,7 @@ class Trainer(object):
 					metrics.accumulate(loss.item(), n_samples, pred, target)
 
 					if it % 50 == 0:
-						print('Epoch: {}, Iteration: {}, Loss: {:.4f}, F1_score: {:.4f}'.format(epoch, it, metrics.loss_per_sample, metrics.f1))
+						print('Phase: {}, Epoch: {}, Iteration: {}, Loss: {:.4f}, F1_score: {:.4f}'.format(phase, epoch, it, metrics.loss_per_sample, metrics.f1))
 
 				if scheduler:
 					scheduler.step()

@@ -37,20 +37,8 @@ class MarshPlant_Dataset_pa(Dataset):
         return len(self.imgfiles)
 
     def __getitem__(self, idx):
-        #return dataset[idx]
-        #print(self.imgfiles[idx])
         y = torch.tensor(self.anns[idx]).float()  #annotations
         im = Image.open(self.imgfiles[idx])
-        #im = cv2.imread(self.imgfiles[idx])
-        #dst = cv2.fastNlMeansDenoisingColored(im,None,10,10,7,21)
-        #im = cv2.resize(im, (512,512)) #resize patch
-        #mean_value= im.mean()
-        #subtracting each pixel of the image from mean
-        #im= mean_value - im
-        #im = np.transpose(im,(2,0,1))/ 255.
-        #im = np.expand_dims(im, axis=0)
-        #denoising instead of image mean centering
-        #x = torch.from_numpy(im).float()
         x = self.transform(im)
         return {'X': x, 'Y': y}
 

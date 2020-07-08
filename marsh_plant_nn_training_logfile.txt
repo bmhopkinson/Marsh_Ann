@@ -1,0 +1,12 @@
+epoch	0	phase	train	Loss	0.0000	Precision	0.7912
+epoch	0	phase	val	Loss	0.0000	Precision	0.8970
+epoch	1	phase	train	Loss	0.0000	Precision	0.8825
+epoch	1	phase	val	Loss	0.0000	Precision	0.9189
+epoch	2	phase	train	Loss	0.0000	Precision	0.8987
+epoch	2	phase	val	Loss	0.0000	Precision	0.9273
+epoch	0	phase	train	Loss	0.0000	Precision	0.9366
+epoch	0	phase	val	Loss	0.0000	Precision	0.9371
+epoch	1	phase	train	Loss	0.0002	Precision	0.9669
+epoch	1	phase	val	Loss	0.0000	Precision	0.9421
+epoch	2	phase	train	Loss	0.0000	Precision	0.9820
+epoch	2	phase	val	Loss	0.0000	Precision	0.9498
