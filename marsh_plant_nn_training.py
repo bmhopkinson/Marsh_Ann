@@ -7,6 +7,7 @@ import torch.distributed as dist
 import torchvision
 from torchvision import transforms
 import PIL
+import yaml
 
 import Evaluator
 import Trainer
@@ -20,37 +21,50 @@ if __name__ == "__main__":
 	print("PyTorch Version: ",torch.__version__)
 	#inputs
 	data_type="pa"
-	modellist= ['resnext']  #['dpn']#,'neat' 'aawide','resnext','densenet','resnet','inception','pyramid','dpn']
+#	config_files = ['./config_files/resnext_data1_aug0.yaml', './config_files/resnext_data1_aug1.yaml',
+#					'./config_files/resnext_data2_aug0.yaml', './config_files/resnext_data2_aug1.yaml',
+#					'./config_files/resnext_data3_aug0.yaml', './config_files/resnext_data3_aug1.yaml'
+#					]
+	config_files = ['./config_files/config_test_2.yaml', 'garbage','./config_files/config_test_3.yaml']
+	#modellist= ['resnext']  #['dpn']#,'neat' 'aawide','resnext','densenet','resnet','inception','pyramid','dpn']
 	image_dim=(512,512)
 	crop_dim = (1000,1000)
 
-	datafiles  = { 'pa':
-			{ 'train' : ['./infiles/pa_2014_ann_train.txt', './infiles/pa_2014_spartadd_train.txt', './infiles/pa_2014_juncadd_train.txt'], #['small_pa_sample.txt'],
-		  	  'val'   : ['./infiles/pa_2014_ann_val.txt'  , './infiles/pa_2014_spartadd_val.txt'  , './infiles/pa_2014_juncadd_val.txt'],
-			  'test'  : ['./infiles/pa_2014_ann_test.txt' , './infiles/pa_2014_spartadd_test.txt'  , './infiles/pa_2014_juncadd_test.txt']
-		},
-
-		'pc':
-	 		{ 'train' : 'marsh_percent_cover_train.txt',
-	 		  'val'   : 'marsh_percent_cover_val.txt',
-			  'test'   : 'marsh_percent_cover_val.txt'
-	 		}
-
-	 }
-
-	train_params = {
-		'batch_size_top' : 16 ,
-		'batch_size_all' : 4 ,
-		'epochs_top' : 3 ,
-		'epochs_all' : 3
-	 }
-
 	distributed=False
 
-	for modelname in modellist:  #convert this to loop on info specified in config file
+	for config in config_files:  #convert this to loop on info specified in config file
+		try:
+			ymlfile = open(config, 'r')
+		except IOError:
+			continue
+		ymldata = yaml.load(ymlfile, Loader=yaml.FullLoader);
+
+		modelname = ymldata["model"]
+		datafiles  = { 'pa':
+				{ 'train' : ymldata["datafiles"]["train"], #['small_pa_sample.txt'],
+			  	  'val'   : ymldata["datafiles"]["val"],
+				  'test'  : ymldata["datafiles"]["test"]
+			},
+
+			'pc':
+		 		{ 'train' : 'marsh_percent_cover_train.txt',
+		 		  'val'   : 'marsh_percent_cover_val.txt',
+				  'test'   : 'marsh_percent_cover_val.txt'
+		 		}
+
+		 }
+
+		train_params = {
+			'batch_size_top' : ymldata["batch_size"]["top"],
+			'batch_size_all' : ymldata["batch_size"]["all"],
+			'epochs_top' : ymldata["epochs"]["top"] ,
+			'epochs_all' : ymldata["epochs"]["all"]
+		}
+		do_data_aug = ymldata["data_aug"]
+		#pdb.set_trace()
 
 		trainer = Trainer.Trainer(train_params, data_type=data_type,modelname=modelname)
-		if(modelname=="pyracrop_dim = (1000,1000)mid" ): #or modelname=='dpn'):
+		if(modelname=="pyramid" ): #or modelname=='dpn'):
 			image_dim=(224,224)
 		if(modelname=="aawide" ):
 			image_dim=(32,32)
@@ -67,15 +81,19 @@ if __name__ == "__main__":
 	    	transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 		])
 
-		transform_train = transforms.Compose([
-			transforms.RandomVerticalFlip(),
-			transforms.RandomHorizontalFlip(),
-			transforms.ColorJitter(hue=.02, saturation=.02),
-			transforms.RandomAffine(20, translate=None, scale = (0.8, 1.1), shear = 10,
-				resample = PIL.Image.BILINEAR, fillcolor=0),
-			transforms.CenterCrop(crop_dim),
-			transforms_base
-		])
+		if(do_data_aug):
+			print("doing data aug")
+			transform_train = transforms.Compose([
+				transforms.RandomVerticalFlip(),
+				transforms.RandomHorizontalFlip(),
+				transforms.ColorJitter(hue=.02, saturation=.02),
+				transforms.RandomAffine(20, translate=None, scale = (0.8, 1.1), shear = 10,
+					resample = PIL.Image.BILINEAR, fillcolor=0),
+					transforms.CenterCrop(crop_dim),
+				transforms_base
+			])
+		else:
+			transforms_train = transforms_base
 
 		transform_test = transforms_base;
 		transform_val = transforms_base;
@@ -119,7 +137,7 @@ if __name__ == "__main__":
 			best_f1 = trainer.train(stage, criterion, optimizer, scheduler = lr_scheduler, best_score=best_f1)
 			print('Finished training {}, best acc {:.4f}'.format(stage, best_f1))
 
-		performer=Evaluator.Evaluator(data_type=data_type,modelname=modelname,transform=transform_test)
+		performer=Evaluator.Evaluator(data_type=data_type,modelname=modelname,transform=transform_test, config_file = config)
 		performer.setup_dataloader(test_data)
 		performer.run()
 		print("Finished Performer class on test")

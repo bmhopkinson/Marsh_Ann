@@ -1,5 +1,6 @@
 **/image_sections/*
 **/modeling/*
 **/infiles/*
+**/config_files/*
 .DS_Store
 __pycache__/*

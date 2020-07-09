@@ -58,3 +58,27 @@ None	307	2875	1	12	0.962382	0.999652	0.000348	0.037618	0.996753	0.962382	0.97926
 micro_precision: 0.9659	 micro_recall: 0.9444	 micro_f1: 0.9550
 macro_precision: 0.8553	 macro_recall: 0.8822	 macro_f1: 0.8685
 ______________________________
+./modeling/saved_models/resnet_pa.torch
+TruePos	TrueNeg	FalsePos	FalseNeg	TruePosRt	TrueNegRt	FalsePosRt	FalseNegRt	Precision	Recall	F1
+Salicornia	0	37	0	34	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Spartina	40	24	0	7	0.851064	1.000000	0.000000	0.148936	1.000000	0.851064	0.919540	
+Limonium	0	66	0	5	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Borrichia	0	71	0	0	nan	1.000000	0.000000	nan	nan	nan	nan	
+Batis	0	47	0	24	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Juncus	0	71	0	0	nan	1.000000	0.000000	nan	nan	nan	nan	
+None	0	63	0	8	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+micro_precision: 1.0000	 micro_recall: 0.3390	 micro_f1: 0.5063
+macro_precision: nan	 macro_recall: nan	 macro_f1: nan
+______________________________
+./modeling/saved_models/resnet_pa.torch
+TruePos	TrueNeg	FalsePos	FalseNeg	TruePosRt	TrueNegRt	FalsePosRt	FalseNegRt	Precision	Recall	F1
+Salicornia	331	2749	5	110	0.750567	0.998184	0.001816	0.249433	0.985119	0.750567	0.851995	
+Spartina	2460	668	13	54	0.978520	0.980910	0.019090	0.021480	0.994743	0.978520	0.986565	
+Limonium	1	3084	0	110	0.009009	1.000000	0.000000	0.990991	1.000000	0.009009	0.017857	
+Borrichia	24	3154	6	11	0.685714	0.998101	0.001899	0.314286	0.800000	0.685714	0.738462	
+Batis	326	2824	8	37	0.898072	0.997175	0.002825	0.101928	0.976048	0.898072	0.935438	
+Juncus	140	2934	88	33	0.809249	0.970880	0.029120	0.190751	0.614035	0.809249	0.698254	
+None	308	2875	1	11	0.965517	0.999652	0.000348	0.034483	0.996764	0.965517	0.980892	
+micro_precision: 0.9674	 micro_recall: 0.9075	 micro_f1: 0.9365
+macro_precision: 0.9095	 macro_recall: 0.7281	 macro_f1: 0.8088
+______________________________

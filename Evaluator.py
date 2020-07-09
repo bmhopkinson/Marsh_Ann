@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 from PerformanceMetrics import PerformanceMetrics , PerformanceMetricsPerClass
 
 class Evaluator(object):
-    def __init__(self, data_type="pa", modelname="resnet", batch_size=32,transform=None):
-        self.outfile ='performance_bozo.txt'
+    def __init__(self, data_type="pa", modelname="resnet", batch_size=32,transform=None, config_file = None):
+        self.outfile ='performance_bozo_2.txt'
         self.THRESHOLD_SIG = 0.5
         self.batch_size = batch_size
         self.bShuffle = False
@@ -20,7 +20,8 @@ class Evaluator(object):
         self.modelname=modelname
         self.data_type=data_type
         self.transform=transform
-        self.data_loader = [];
+        self.data_loader = []
+        self.config_file = config_file
 
         if(data_type=="pa"):
             self.N_CLASSES = 7
@@ -81,7 +82,7 @@ class Evaluator(object):
         self.pred=pred
 
         fout = open(self.outfile,'a')
-        fout.write('%s\n'%self.model_path)
+        fout.write('%s\n'%self.config_file)
         fout.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % \
             ("TruePos","TrueNeg","FalsePos","FalseNeg","TruePosRt","TrueNegRt","FalsePosRt","FalseNegRt","Precision", "Recall", "F1"))
 

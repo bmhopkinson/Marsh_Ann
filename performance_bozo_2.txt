@@ -1,0 +1,48 @@
+./config_files/config_test_2.yaml
+TruePos	TrueNeg	FalsePos	FalseNeg	TruePosRt	TrueNegRt	FalsePosRt	FalseNegRt	Precision	Recall	F1
+Salicornia	0	37	0	34	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Spartina	40	24	0	7	0.851064	1.000000	0.000000	0.148936	1.000000	0.851064	0.919540	
+Limonium	0	66	0	5	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Borrichia	0	71	0	0	nan	1.000000	0.000000	nan	nan	nan	nan	
+Batis	0	47	0	24	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Juncus	0	71	0	0	nan	1.000000	0.000000	nan	nan	nan	nan	
+None	0	63	0	8	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+micro_precision: 1.0000	 micro_recall: 0.3390	 micro_f1: 0.5063
+macro_precision: nan	 macro_recall: nan	 macro_f1: nan
+______________________________
+./config_files/config_test_3.yaml
+TruePos	TrueNeg	FalsePos	FalseNeg	TruePosRt	TrueNegRt	FalsePosRt	FalseNegRt	Precision	Recall	F1
+Salicornia	0	37	0	34	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Spartina	39	24	0	8	0.829787	1.000000	0.000000	0.170213	1.000000	0.829787	0.906977	
+Limonium	0	66	0	5	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Borrichia	0	71	0	0	nan	1.000000	0.000000	nan	nan	nan	nan	
+Batis	0	47	0	24	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Juncus	0	71	0	0	nan	1.000000	0.000000	nan	nan	nan	nan	
+None	0	63	0	8	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+micro_precision: 1.0000	 micro_recall: 0.3305	 micro_f1: 0.4968
+macro_precision: nan	 macro_recall: nan	 macro_f1: nan
+______________________________
+./config_files/config_test_2.yaml
+TruePos	TrueNeg	FalsePos	FalseNeg	TruePosRt	TrueNegRt	FalsePosRt	FalseNegRt	Precision	Recall	F1
+Salicornia	0	37	0	34	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Spartina	40	22	2	7	0.851064	0.916667	0.083333	0.148936	0.952381	0.851064	0.898876	
+Limonium	0	66	0	5	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Borrichia	0	71	0	0	nan	1.000000	0.000000	nan	nan	nan	nan	
+Batis	15	47	0	9	0.625000	1.000000	0.000000	0.375000	1.000000	0.625000	0.769231	
+Juncus	0	71	0	0	nan	1.000000	0.000000	nan	nan	nan	nan	
+None	0	63	0	8	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+micro_precision: 0.9649	 micro_recall: 0.4661	 micro_f1: 0.6286
+macro_precision: nan	 macro_recall: nan	 macro_f1: nan
+______________________________
+./config_files/config_test_3.yaml
+TruePos	TrueNeg	FalsePos	FalseNeg	TruePosRt	TrueNegRt	FalsePosRt	FalseNegRt	Precision	Recall	F1
+Salicornia	0	37	0	34	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Spartina	39	24	0	8	0.829787	1.000000	0.000000	0.170213	1.000000	0.829787	0.906977	
+Limonium	0	66	0	5	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Borrichia	0	71	0	0	nan	1.000000	0.000000	nan	nan	nan	nan	
+Batis	0	47	0	24	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+Juncus	0	71	0	0	nan	1.000000	0.000000	nan	nan	nan	nan	
+None	0	63	0	8	0.000000	1.000000	0.000000	1.000000	nan	0.000000	nan	
+micro_precision: 1.0000	 micro_recall: 0.3305	 micro_f1: 0.4968
+macro_precision: nan	 macro_recall: nan	 macro_f1: nan
+______________________________
