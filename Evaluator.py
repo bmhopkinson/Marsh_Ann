@@ -20,25 +20,26 @@ class Evaluator(object):
         self.modelname=modelname
         self.data_type=data_type
         self.transform=transform
+        self.data_loader = [];
 
         if(data_type=="pa"):
             self.N_CLASSES = 7
-            self.test_infile = ['./infiles/pa_2014_ann_test.txt'  , './infiles/pa_2014_spartadd_test.txt'  , './infiles/pa_2014_juncadd_test.txt']
             self.Pennings_Classes = ['Salicornia','Spartina','Limonium','Borrichia','Batis','Juncus','None']
-            self.test_data  = MarshPlant_Dataset_pa(self.test_infile,transform=self.transform)
         elif(data_type=='pc'):
             self.N_CLASSES = 9
-            self.test_infile  = 'marsh_percent_cover_test.txt'
             self.Pennings_Classes = [ 'Spartina','Juncus', 'Salicornia','Batis','Borrichia','Limonium','Soil' ,'other','Unknown' ]
-            self.test_data  = MarshPlant_Dataset_pc(self.test_infile,transform=self.transform)
+
 
         self.model_path = './modeling/saved_models/'+modelname+'_'+data_type+'.torch'
         model = torch.load(self.model_path)
         #print(model)
-        model.eval()
-        sigfunc = nn.Sigmoid()
+        self.model = model.eval()
 
-        data_loader = torch.utils.data.DataLoader(self.test_data, batch_size = self.batch_size, shuffle = self.bShuffle, num_workers = self.num_workers)
+
+    def setup_dataloader(self,dataset):
+        self.data_loader =torch.utils.data.DataLoader(dataset, batch_size = self.batch_size, shuffle = self.bShuffle, num_workers = self.num_workers)
+
+    def run(self):
 
         cpu = torch.device("cpu")
         gpu = torch.device("cuda")
@@ -46,13 +47,15 @@ class Evaluator(object):
         pred = np.empty((0,self.N_CLASSES), int)
         ann  = np.empty((0,self.N_CLASSES), int)
 
+        sigfunc = nn.Sigmoid()
+
         metrics = PerformanceMetrics()
         metrics_per_class = PerformanceMetricsPerClass(self.N_CLASSES)
 
         with torch.no_grad():
-            for it, batch in enumerate(data_loader):
+            for it, batch in enumerate(self.data_loader):
                 input = batch['X'].cuda()#to(device)
-                output = model(input).to(cpu)
+                output = self.model(input).to(cpu)
 
                 if(self.data_type=='pa'):
                     sig = output.detach().numpy()
@@ -71,8 +74,8 @@ class Evaluator(object):
                 ann = np.append(ann, this_ann.astype(int), axis = 0)
 
                 n_samples =  input.size(0)
-                metrics.accumulate(0.0, batch_size, this_pred.astype(int), this_ann.astype(int))
-                metrics_per_class.accumulate(0.0, batch_size, this_pred.astype(int), this_ann.astype(int))
+                metrics.accumulate(0.0, self.batch_size, this_pred.astype(int), this_ann.astype(int))
+                metrics_per_class.accumulate(0.0, self.batch_size, this_pred.astype(int), this_ann.astype(int))
 
         self.ann=ann
         self.pred=pred

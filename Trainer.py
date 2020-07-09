@@ -40,8 +40,8 @@ class Trainer(object):
 # DataLoader Setup
 ###
 	def setup_dataloaders(self,dataset_dict, bShuffle,num_workers,samplers):
-		for stage in self.batch_size:
-			for phase in dataset_dict:
+		for stage in ['top','all']:
+			for phase in ['train','val']:
 				if samplers is not None:
 					self.dataloaders[stage][phase] =  torch.utils.data.DataLoader(dataset_dict[phase], batch_size = self.batch_size[stage], shuffle = bShuffle, num_workers = num_workers,sampler=samplers[phase])
 				else:
