@@ -1,4 +1,10 @@
-epoch	0	phase	train	Loss	0.0084	Precision	0.4537
-epoch	0	phase	val	Loss	0.0088	Precision	0.4476
-epoch	0	phase	train	Loss	0.0070	Precision	0.5936
-epoch	0	phase	val	Loss	0.0072	Precision	0.7111
+epoch	0	phase	train	sig_thresh:	0.50	Loss	0.0049	Precision	0.4029
+epoch	0	phase	val	sig_thresh:	0.30	Loss	0.0050	Precision	0.3106
+epoch	0	phase	val	sig_thresh:	0.50	Loss	0.0056	Precision	0.4965
+epoch	0	phase	val	sig_thresh:	0.70	Loss	0.0056	Precision	nan
+epoch	0	phase	val	sig_thresh:	0.90	Loss	0.0058	Precision	nan
+epoch	0	phase	train	sig_thresh:	0.50	Loss	0.0035	Precision	0.6333
+epoch	0	phase	val	sig_thresh:	0.30	Loss	0.0031	Precision	0.5129
+epoch	0	phase	val	sig_thresh:	0.50	Loss	0.0042	Precision	0.8527
+epoch	0	phase	val	sig_thresh:	0.70	Loss	0.0036	Precision	0.6761
+epoch	0	phase	val	sig_thresh:	0.90	Loss	0.0038	Precision	0.1088

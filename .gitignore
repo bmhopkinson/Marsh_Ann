@@ -2,5 +2,6 @@
 **/modeling/*
 **/infiles/*
 **/config_files/*
+**/utilities/*
 .DS_Store
 __pycache__/*

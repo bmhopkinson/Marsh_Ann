@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from PerformanceMetrics import PerformanceMetrics , PerformanceMetricsPerClass
 
 class Evaluator(object):
-    def __init__(self, data_type="pa", modelname="resnet", batch_size=32,transform=None, config_file = None):
+    def __init__(self, model_path, data_type="pa", modelname="resnet", batch_size=32,transform=None, config_file = None):
         self.outfile ='performance_bozo_2.txt'
         self.THRESHOLD_SIG = 0.5
         self.batch_size = batch_size
@@ -30,9 +30,8 @@ class Evaluator(object):
             self.N_CLASSES = 9
             self.Pennings_Classes = [ 'Spartina','Juncus', 'Salicornia','Batis','Borrichia','Limonium','Soil' ,'other','Unknown' ]
 
-
-        self.model_path = './modeling/saved_models/'+modelname+'_'+data_type+'.torch'
-        model = torch.load(self.model_path)
+        print('evaluating {}'.format(model_path))
+        model = torch.load(model_path)
         #print(model)
         self.model = model.eval()
 

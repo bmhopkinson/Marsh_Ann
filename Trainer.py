@@ -13,6 +13,7 @@ class Trainer(object):
 		self.epochs = {}
 		self.lr = {}
 		self.dataloaders = { 'top' : {}, 'all' :{} }
+		self.sig_thresholds = {}
 		self.model = []
 		self.criterion = []
 		self.optimizable_parameters = []
@@ -30,11 +31,12 @@ class Trainer(object):
 			self.N_CLASSES = 7
 		elif(data_type=='pc'):
 			self.N_CLASSES = 9
+		self.sig_thresholds['train']  = [0.5]
+		self.sig_thresholds['val'] = [0.3, 0.5, 0.7, 0.9]
 
 		self.log_file = open("marsh_plant_nn_training_logfile.txt","w")
-		self.model_path = './modeling/saved_models/'+modelname+'_'+data_type+'.torch'
-
-
+		self.model_path_base = './modeling/saved_models/'+modelname+'_'+data_type
+		self.best_model = [];
 
 ###
 # DataLoader Setup
@@ -128,7 +130,7 @@ class Trainer(object):
 
 			self.optimizable_parameters = self.model.parameters()
 
-	def evaluate_batch(self, input, target, phase):
+	def evaluate_batch(self, input, target, phase, sig_thresh):
 		with torch.set_grad_enabled(phase =='train'):  #track gradients for backprop in training phase
 			sigfunc = nn.Sigmoid()
 			if(self.modelname=='inception' and phase=='train'):
@@ -164,14 +166,40 @@ class Trainer(object):
 			else:
 				sig = sigfunc(output)
 				sig = sig.to("cpu").detach().numpy()
-				pred = sig > 0.5 #make this threshold variable
+				pred = sig > sig_thresh
 				pred = pred.astype(int)
 
 		return pred, loss
 
+	def evaluate_epoch(self, phase, optimizer, dataloader, sig_thresh):
+		metrics = PerformanceMetrics()
 
-	def train(self, stage, criterion, optimizer, scheduler = None,  best_score=0 ):
+		for it, batch in enumerate(dataloader):
+			input  = batch['X'].cuda()#to(device)
+			target = batch['Y'].cuda()#to(device)
+
+			optimizer.zero_grad()  #zero gradients
+
+			pred, loss = self.evaluate_batch(input, target, phase, sig_thresh)
+			if phase == 'train':
+				loss.backward()  # update the gradients
+				optimizer.step()  # update sgd optimizer lr
+
+			# compare model output and annotations  - more easily done with numpy
+			target = target.to("cpu").detach().numpy()  #take off gpu, detach from gradients
+			target = target.astype(int)
+
+			n_samples =  input.size(0)
+			metrics.accumulate(loss.item(), n_samples, pred, target)
+
+			if it % 50 == 0:
+				print('\t it: {}, Loss: {:.4f}, F1_score: {:.4f}'.format(it, metrics.loss_per_sample, metrics.f1))
+
+		return metrics
+
+	def train(self, stage, criterion, optimizer, scheduler = None,  results = {'best_score': 0.0, 'best_model': []} ):
 		self.criterion = criterion
+		best_score = results['best_score']
 		for epoch in range(self.epochs[stage]):
 			for phase in ['train','val']:
 				if phase == 'train':
@@ -179,40 +207,25 @@ class Trainer(object):
 				else:
 					self.model.eval()
 
-				metrics = PerformanceMetrics()
+				for sig_thresh in self.sig_thresholds[phase]:
+					print('Epoch {}, Phase {}, sig_thresh {:.2f}'.format(epoch, phase, sig_thresh))
+					metrics = self.evaluate_epoch(phase, optimizer, self.dataloaders[stage][phase], sig_thresh)
 
-				for it, batch in enumerate(self.dataloaders[stage][phase]):
-					input = batch['X'].cuda()#to(device)
-					target = batch['Y'].cuda()#to(device)
+					# save model if it is the best model on val set
+					print('{} Loss: {:.4f}, sig_thresh: {:.2f}, F1_score: {:.4f}, precision: {:.4f}, recall: {:.4f}'.format(phase, sig_thresh, metrics.loss_per_sample, metrics.f1, metrics.precision, metrics.recall))
+					self.log_file.write('epoch\t{}\tphase\t{}\tsig_thresh:\t{:.2f}\tLoss\t{:.4f}\tPrecision\t{:.4f}\n'.format(epoch, phase,  sig_thresh, metrics.loss_per_sample, metrics.f1))
 
-					optimizer.zero_grad()  #zero gradients
-
-					pred, loss = self.evaluate_batch(input, target, phase)
-					if phase == 'train':
-						loss.backward()  # update the gradients
-						optimizer.step()  # update sgd optimizer lr
-
-					# compare model output and annotations  - more easily done with numpy
-					target = target.to("cpu").detach().numpy()  #take off gpu, detach from gradients
-					target = target.astype(int)
-
-					n_samples =  input.size(0)
-					metrics.accumulate(loss.item(), n_samples, pred, target)
-
-					if it % 50 == 0:
-						print('Phase: {}, Epoch: {}, Iteration: {}, Loss: {:.4f}, F1_score: {:.4f}'.format(phase, epoch, it, metrics.loss_per_sample, metrics.f1))
+					if phase == 'val' and metrics.f1 > best_score:
+						best_score = metrics.f1
+						full_model_path = '{}_sig_{:.2f}.torch'.format(self.model_path_base,sig_thresh)
+						self.best_model = full_model_path;
+						torch.save(self.model, full_model_path)
 
 				if scheduler:
 					scheduler.step()
 					print("Learning rate :")
 					print(scheduler.get_lr())
 
-				# save model if it is the best model on val set
-				print('{} Loss: {:.4f} F1_score: {:.4f}'.format(phase, metrics.loss_per_sample, metrics.f1))
-				self.log_file.write('epoch\t{}\tphase\t{}\tLoss\t{:.4f}\tPrecision\t{:.4f}\n'.format(epoch, phase,  metrics.loss_per_sample, metrics.f1))
 
-				if phase == 'val' and metrics.f1 > best_score:
-					best_score = metrics.f1
-					torch.save(self.model, self.model_path)# save state dict, this method is bound to break.
 
-		return best_score
+		return {'best_score': best_score, 'best_model': self.best_model}

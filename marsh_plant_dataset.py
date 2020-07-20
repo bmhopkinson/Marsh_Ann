@@ -8,11 +8,13 @@ from torch.utils.data import Dataset
 from PIL import Image
 
 class MarshPlant_Dataset_pa(Dataset):
-    def __init__(self, infiles,transform=None):
+    def __init__(self, infiles, train = True, transform=None):
         #initialize dataset
         self.imgfiles = []
         self.anns = []
         self.transform= transform
+        self.train = train
+
         for file in infiles:
             with open(file,'r') as f:
                 reader = csv.reader(f,delimiter='\t')
@@ -24,8 +26,9 @@ class MarshPlant_Dataset_pa(Dataset):
                         height, width = im.shape[:2]
                         if height > 100 and width > 100:
                             self.imgfiles.append(fname)
-                            ann = list(map(int,row[1:8]))
-                            self.anns.append(ann)
+                            if self.train:
+                                ann = list(map(int,row[1:8]))
+                                self.anns.append(ann)
                         else:
                             print("{} dimension are too small".format(fname))
                     except:
@@ -37,11 +40,13 @@ class MarshPlant_Dataset_pa(Dataset):
         return len(self.imgfiles)
 
     def __getitem__(self, idx):
-        y = torch.tensor(self.anns[idx]).float()  #annotations
         im = Image.open(self.imgfiles[idx])
         x = self.transform(im)
-        return {'X': x, 'Y': y}
-
+        if self.train:
+            y = torch.tensor(self.anns[idx]).float()  #annotations
+            return {'X': x, 'Y': y}
+        else:
+            return x
 
 class MarshPlant_Dataset_pc(Dataset):
     def __init__(self, infile,transform=None):

@@ -21,11 +21,11 @@ if __name__ == "__main__":
 	print("PyTorch Version: ",torch.__version__)
 	#inputs
 	data_type="pa"
-#	config_files = ['./config_files/resnext_data1_aug0.yaml', './config_files/resnext_data1_aug1.yaml',
-#					'./config_files/resnext_data2_aug0.yaml', './config_files/resnext_data2_aug1.yaml',
-#					'./config_files/resnext_data3_aug0.yaml', './config_files/resnext_data3_aug1.yaml'
-#					]
-	config_files = ['./config_files/config_test_2.yaml', 'garbage','./config_files/config_test_3.yaml']
+	#config_files = ['./config_files/resnext_data1_aug0.yaml', './config_files/resnext_data1_aug1.yaml',
+	#				'./config_files/resnext_data2_aug0.yaml', './config_files/resnext_data2_aug1.yaml',
+	#				'./config_files/resnext_data3_aug0.yaml', './config_files/resnext_data3_aug1.yaml'
+	#				]
+	config_files = ['./config_files/config_test_2.yaml']
 	#modellist= ['resnext']  #['dpn']#,'neat' 'aawide','resnext','densenet','resnet','inception','pyramid','dpn']
 	image_dim=(512,512)
 	crop_dim = (1000,1000)
@@ -93,16 +93,16 @@ if __name__ == "__main__":
 				transforms_base
 			])
 		else:
-			transforms_train = transforms_base
+			transform_train = transforms_base
 
 		transform_test = transforms_base;
 		transform_val = transforms_base;
 
 		#load datasets and setup dataloaders
 		if(data_type=="pa"):
-			train_data = MarshPlant_Dataset_pa(datafiles[data_type]['train'] ,transform=transform_train)
-			val_data   = MarshPlant_Dataset_pa( datafiles[data_type]['val']  ,transform=transform_val)
-			test_data  = MarshPlant_Dataset_pa( datafiles[data_type]['test'] ,transform=transform_test)
+			train_data = MarshPlant_Dataset_pa(datafiles[data_type]['train'], train=True ,transform=transform_train)
+			val_data   = MarshPlant_Dataset_pa( datafiles[data_type]['val'] , train=True ,transform=transform_val)
+			test_data  = MarshPlant_Dataset_pa( datafiles[data_type]['test'], train=True ,transform=transform_test)
 			criterion = nn.BCEWithLogitsLoss().cuda()
 		if(data_type=="pc"):
 			train_data = MarshPlant_Dataset_pc(datafiles[data_type]['train'],transform=transform_train)
@@ -124,7 +124,7 @@ if __name__ == "__main__":
 		trainer.setup_dataloaders(datasets, bShuffle, num_workers,samplers=samplers)
 		trainer.setup_model(distributed) #setup model and training parameters
 
-		best_f1 = 0.0
+		results = {'best_score': 0.0, 'best_model': []}
 		gamma = {'top' :0.5, 'all': 0.8}
 		for stage in ['top', 'all']:
 		# Train Top (fc) layer
@@ -134,10 +134,10 @@ if __name__ == "__main__":
 			optimizer = torch.optim.Adam(trainer.optimizable_parameters, lr = trainer.lr[stage])
 			lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=gamma[stage])
 
-			best_f1 = trainer.train(stage, criterion, optimizer, scheduler = lr_scheduler, best_score=best_f1)
-			print('Finished training {}, best acc {:.4f}'.format(stage, best_f1))
+			results = trainer.train(stage, criterion, optimizer, scheduler = lr_scheduler, results = results)
+			print('Finished training {}, best acc {:.4f}'.format(stage, results['best_score']))
 
-		performer=Evaluator.Evaluator(data_type=data_type,modelname=modelname,transform=transform_test, config_file = config)
+		performer=Evaluator.Evaluator(results['best_model'],data_type=data_type,modelname=modelname,transform=transform_test, config_file = config)
 		performer.setup_dataloader(test_data)
 		performer.run()
 		print("Finished Performer class on test")
