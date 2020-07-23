@@ -25,7 +25,7 @@ if __name__ == "__main__":
 	#				'./config_files/resnext_data2_aug0.yaml', './config_files/resnext_data2_aug1.yaml',
 	#				'./config_files/resnext_data3_aug0.yaml', './config_files/resnext_data3_aug1.yaml'
 	#				]
-	config_files = ['./config_files/config_test_2.yaml']
+	config_files = ['./config_files/resnext_data3_aug0.yaml']
 	#modellist= ['resnext']  #['dpn']#,'neat' 'aawide','resnext','densenet','resnet','inception','pyramid','dpn']
 	image_dim=(512,512)
 	crop_dim = (1000,1000)

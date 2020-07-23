@@ -46,7 +46,7 @@ class MarshPlant_Dataset_pa(Dataset):
             y = torch.tensor(self.anns[idx]).float()  #annotations
             return {'X': x, 'Y': y}
         else:
-            return x
+            return {'X': x, 'fname': self.imgfiles[idx]}
 
 class MarshPlant_Dataset_pc(Dataset):
     def __init__(self, infile,transform=None):
