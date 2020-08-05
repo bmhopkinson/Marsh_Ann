@@ -1,0 +1,12 @@
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3074_0.jpg
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3073_12.jpg
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3074_6.jpg
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3074_3.jpg
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3073_14.jpg
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3073_13.jpg
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3074_4.jpg
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3073_11.jpg
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3074_2.jpg
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3074_1.jpg
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3074_5.jpg
+./images/image_sections_BH/test/Row5_3_3075to3146_DSC_3073_10.jpg

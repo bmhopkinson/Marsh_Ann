@@ -2,6 +2,7 @@
 **/modeling/*
 **/infiles/*
 **/config_files/*
+**/results/*
 **/utilities/images/*
 .DS_Store
 __pycache__/*

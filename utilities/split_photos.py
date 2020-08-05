@@ -2,6 +2,8 @@ import os
 import cv2
 import numpy as np
 import re
+import pdb
+import multiprocessing
 
 IMG_WIDTH  = 6000
 IMG_HEIGHT = 4000
@@ -11,7 +13,8 @@ N_SECTIONS = N_WIDE * N_HIGH
 x_b = np.linspace(0,IMG_WIDTH , N_WIDE +1, dtype='int')
 y_b = np.linspace(0,IMG_HEIGHT, N_HIGH +1, dtype='int')
 
-path_regex = re.compile('.+?/(.*)$')
+outdir = './images/image_sections_BH'
+img_regex = re.compile('^(.*)\.[jJ][pP][eE]?[gG]')
 
 def section_image(im):
    sections = []
@@ -38,7 +41,7 @@ def rotate_image(mat, angle):
     rotation_mat = cv2.getRotationMatrix2D(image_center, angle, 1.)
 
     # rotation calculates the cos and sin, taking absolutes of those.
-    abs_cos = abs(rotation_mat[0,0]) 
+    abs_cos = abs(rotation_mat[0,0])
     abs_sin = abs(rotation_mat[0,1])
 
     # find the new width and height bounds
@@ -53,35 +56,48 @@ def rotate_image(mat, angle):
     rotated_mat = cv2.warpAffine(mat, rotation_mat, (bound_w, bound_h))
     return rotated_mat
 
+def split_image(img_path):
 
-imdir = 'Deans_Creek_2014'
-outdir = './image_sections_BH'
+    dirpath = os.path.dirname(img_path)
+    new_dirpath = os.path.join(outdir,dirpath)
+    final_dir = dirpath.split('/')[-1]
+    name = os.path.basename(img_path)
+    file_base = os.path.splitext(name)[0]
+#    pdb.set_trace()
+
+    im = cv2.imread(img_path)
+    height , width = im.shape[:2]
+
+    if width < height:
+        im_rot = rotate_image(im, 90);
+    else:
+        im_rot = im;
+
+    im_sections = section_image(im_rot)
+    for i in range(N_SECTIONS):
+        outfile = final_dir  + "_" + file_base + "_" + str(i) +'.jpg'
+        outpath = os.path.join(new_dirpath, outfile)
+        cv2.imwrite(outpath,im_sections[i])
+
+
+imdir = './images/Deans_Creek_2014/'
+
+imgs_to_split = []
 for (dirpath, dirname, files) in os.walk(imdir, topdown='True'):
     for name in files:
         fullpath = os.path.join(dirpath,name)
+        imgs_to_split.append(fullpath)
 
-        m = path_regex.findall(dirpath)
-        dirpath_sub = m[0]
-        new_dirpath = os.path.join(outdir,dirpath_sub)
-        if not os.path.isdir(new_dirpath):
+        dirpath = os.path.dirname(fullpath)
+        new_dirpath = os.path.join(outdir,dirpath)
+        if not os.path.isdir(new_dirpath):  #set up directories here b/c it can lead to race conditions in multiprocessing section
             os.makedirs(new_dirpath)
- 
-        final_dir = dirpath.split('/')[-1]
 
-        file_base = os.path.splitext(name)[0]
-        im = cv2.imread(fullpath)
-        height , width = im.shape[:2]
-
-        if width < height:
-            im_rot = rotate_image(im, 90);
-        else:
-            im_rot = im;
-        im_sections = section_image(im_rot)
-        for i in range(N_SECTIONS):
-            outfile = final_dir  + "_" + file_base + "_" + str(i) +'.jpg'
-            outpath = os.path.join(new_dirpath, outfile)
-            cv2.imwrite(outpath,im_sections[i])
-
+#pdb.set_trace()
+pool = multiprocessing.Pool(processes = 8)
+pool.map(split_image, imgs_to_split)
+#for img in imgs_to_split:
+#    split_image(img)
 
 #imfile ='./images/2014/Row1_1_2748to2797/DSC_2791.jpg'
 
