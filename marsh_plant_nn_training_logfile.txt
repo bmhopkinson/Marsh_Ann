@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 epoch	0	phase	train	Loss	0.2486	Acc	0.6289
 epoch	0	phase	val	Loss	0.1964	Acc	0.6869
 epoch	1	phase	train	Loss	0.1699	Acc	0.7683
@@ -98,3 +99,20 @@ epoch	28	phase	train	Loss	0.0041	Acc	0.9946
 epoch	28	phase	val	Loss	0.2291	Acc	0.9073
 epoch	29	phase	train	Loss	0.0043	Acc	0.9937
 epoch	29	phase	val	Loss	0.2142	Acc	0.9110
+=======
+epoch	0	phase	train	sig_thresh:	0.50	Loss	0.0011	Precision	0.5990
+epoch	0	phase	val	sig_thresh:	0.30	Loss	0.0085	Precision	0.7293
+epoch	0	phase	val	sig_thresh:	0.50	Loss	0.0089	Precision	0.6432
+epoch	0	phase	val	sig_thresh:	0.70	Loss	0.0069	Precision	0.1088
+epoch	0	phase	val	sig_thresh:	0.90	Loss	0.0054	Precision	nan
+epoch	1	phase	train	sig_thresh:	0.50	Loss	0.0011	Precision	0.6954
+epoch	1	phase	val	sig_thresh:	0.30	Loss	0.0093	Precision	0.7293
+epoch	1	phase	val	sig_thresh:	0.50	Loss	0.0087	Precision	0.5829
+epoch	1	phase	val	sig_thresh:	0.70	Loss	0.0082	Precision	0.0263
+epoch	1	phase	val	sig_thresh:	0.90	Loss	0.0078	Precision	nan
+epoch	2	phase	train	sig_thresh:	0.50	Loss	0.0006	Precision	0.7370
+epoch	2	phase	val	sig_thresh:	0.30	Loss	0.0083	Precision	0.7326
+epoch	2	phase	val	sig_thresh:	0.50	Loss	0.0074	Precision	0.6106
+epoch	2	phase	val	sig_thresh:	0.70	Loss	0.0088	Precision	0.0435
+epoch	2	phase	val	sig_thresh:	0.90	Loss	0.0095	Precision	nan
+>>>>>>> refactor
